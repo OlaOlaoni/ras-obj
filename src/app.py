@@ -23,12 +23,13 @@ def annotate_image(
     labels = []
     for i in np.arange(0, detections.shape[2]):
         confidence = detections[0, 0, i, 2]
+        idx = int(detections[0, 0, i, 1])
 
-        if confidence > confidence_threshold:
+        if confidence > confidence_threshold and CLASSES[idx] == "person":
             # extract the index of the class label from the `detections`,
             # then compute the (x, y)-coordinates of the bounding box for
             # the object
-            idx = int(detections[0, 0, i, 1])
+            
             box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
             (startX, startY, endX, endY) = box.astype("int")
 
@@ -42,9 +43,35 @@ def annotate_image(
             )
     return image, labels
 
-image = np.array(Image.open(DEMO_IMAGE))
-detections = process_image(image)
-image, labels = annotate_image(image, detections, DEFAULT_CONFIDENCE_THRESHOLD)
-img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# image = np.array(Image.open(DEMO_IMAGE))
+# detections = process_image(image)
+# image, labels = annotate_image(image, detections, DEFAULT_CONFIDENCE_THRESHOLD)
+# img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# cv2.imwrite("sample.jpg", img)
 
-cv2.imwrite("sample.jpg", img)
+## WebCam
+cam = cv2.VideoCapture(0)
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, 600)
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
+
+while True:
+
+    # Read the frames
+    ret_val, img = cam.read()
+    
+    #Flip Image
+    img = cv2.flip(img, 1)
+
+    #Predict Frames
+    detections = process_image(img)
+    img, labels = annotate_image(img, detections, DEFAULT_CONFIDENCE_THRESHOLD)
+
+    # Display Predictions
+    cv2.imshow('my webcam', img)
+    
+    if (cv2.waitKey(1) & 0xFF == ord("q")) or (cv2.waitKey(1)==27): 
+        break  # esc to quit
+
+#Close Camera
+cam.release()
+cv2.destroyAllWindows()
