@@ -67,7 +67,7 @@ while True:
     img, labels = annotate_image(img, detections, DEFAULT_CONFIDENCE_THRESHOLD)
 
     # Display Predictions
-    cv2.imshow('my webcam', img)
+    cv2.imshow('cam', img)
     
     if (cv2.waitKey(1) & 0xFF == ord("q")) or (cv2.waitKey(1)==27): 
         break  # esc to quit
