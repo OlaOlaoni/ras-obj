@@ -44,8 +44,42 @@ def annotate_image(
             )
     return image, labels
 
-image = np.array(Image.open(DEMO_IMAGE))
-detections = process_image(image)
-image, labels = annotate_image(image, detections, DEFAULT_CONFIDENCE_THRESHOLD)
-img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-cv2.imwrite("sample.jpg", img)
+# image = np.array(Image.open(DEMO_IMAGE))
+# detections = process_image(image)
+# image, labels = annotate_image(image, detections, DEFAULT_CONFIDENCE_THRESHOLD)
+# img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# cv2.imwrite("sample.jpg", img)
+
+frame_rate_calc = 1
+freq = cv2.getTickFrequency()
+font = cv2.FONT_HERSHEY_SIMPLEX
+
+while True:
+    # Initialize Picamera and grab reference to the raw capture
+    camera = PiCamera()
+    camera.resolution = (640,480)
+    camera.framerate = 10
+    rawCapture = PiRGBArray(camera, size=(640,480))
+    rawCapture.truncate(0)
+    for frame1 in camera.capture_continuous(rawCapture, format="bgr",use_video_port=True):
+        t1 = cv2.getTickCount()
+        # Acquire frame and expand frame dimensions to have shape: [1, None, None, 3]
+        # i.e. a single-column array, where each item in the column has the pixel RGB value
+        frame = np.copy(frame1.array)
+        frame.setflags(write=1)
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # Perform the actual detection by running the model with the image as input
+        detections = process_image(frame)
+        img, labels = annotate_image(frame, detections, DEFAULT_CONFIDENCE_THRESHOLD)
+
+        cv2.putText(frame,"FPS: {0:.2f}".format(frame_rate_calc),(30,50),font,1,(255,255,0),2,cv2.LINE_AA)
+        # All the results have been drawn on the frame, so it's time to display it.
+        cv2.imshow('Object detector', frame)
+        t2 = cv2.getTickCount()
+        time1 = (t2-t1)/freq
+        frame_rate_calc = 1/time1
+        # Press 'q' to quit
+        if cv2.waitKey(1) == ord('s'):
+            break
+        rawCapture.truncate(0)
+    camera.close()
