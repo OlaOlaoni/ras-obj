@@ -79,7 +79,7 @@ while True:
         time1 = (t2-t1)/freq
         frame_rate_calc = 1/time1
         # Press 'q' to quit
-        if cv2.waitKey(1) == ord('s'):
-            break
+        if (cv2.waitKey(1) & 0xFF == ord("q")) or (cv2.waitKey(1)==27): 
+            break  # esc to quit
         rawCapture.truncate(0)
     camera.close()
